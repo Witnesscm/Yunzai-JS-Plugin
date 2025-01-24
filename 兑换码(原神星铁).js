@@ -41,7 +41,7 @@ export class exchangeCode extends plugin {
     this.path = './plugins/example/config'
     this.file = this.path + '/exchange.yaml'
     this.Uids = {
-      gs: [75276550],
+      gs: [75276550, 75276539],
       sr: [288909600, 80823548]
     }
 
@@ -105,12 +105,17 @@ export class exchangeCode extends plugin {
     this.code_ver = index_data['code_ver']
     if (index_data.remain > 0) return {}
 
-    //截止日期第二天中午12点
+    /**
+     * 截止日期
+     * 原神: 3天后12:00:00
+     * 铁道: 1天后23:59:59
+     */
     let deadline = new Date(index_data['start'])
-    deadline.setDate(deadline.getDate() + 1)
     if (game == 'gs') {
+      deadline.setDate(deadline.getDate() + 3)
       deadline.setHours(12, 0, 0)
     } else {
+      deadline.setDate(deadline.getDate() + 1)
       deadline.setHours(23, 59, 59)
     }
 
@@ -243,7 +248,7 @@ export class exchangeCode extends plugin {
       return
     }
     if (!this.e.member?.is_admin && !this.e.isMaster) {
-      await this.reply('暂无权限，只有管理员才能操作', true)
+      await this.reply('暂无权限，只有群管理员才能操作', true)
       return true
     }
 
