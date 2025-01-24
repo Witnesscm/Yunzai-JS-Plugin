@@ -140,6 +140,7 @@ export class exchangeCode extends plugin {
       index: `https://api-takumi.mihoyo.com/event/miyolive/index`,
       code: `https://api-takumi-static.mihoyo.com/event/miyolive/refreshCode?version=${this.code_ver}&time=${this.now}`,
       actId: `https://bbs-api.mihoyo.com/painter/api/user_instant/list?offset=0&size=20&uid=${this.uid}`,
+      home: `https://bbs-api.miyoushe.com/apihub/api/home/new?gids=${this.gid}`,
     }
 
     let response
@@ -147,7 +148,9 @@ export class exchangeCode extends plugin {
       response = await fetch(url[type], {
         method: 'get',
         headers: {
-          'x-rpc-act_id': this.actId
+          'x-rpc-app_version': '2.81.1',
+          'x-rpc-client_type': '2',
+          'x-rpc-act_id': this.actId,
         }
       })
     } catch (error) {
@@ -191,11 +194,32 @@ export class exchangeCode extends plugin {
     return actId
   }
 
+  async getActId2(game) {
+    let actId = ''
+    this.gid = game == 'gs' ? '2' : '6'
+    const ret = await this.getData('home')
+    if (ret.error || ret.retcode !== 0) {
+      return actId
+    }
+
+    for (const item of ret?.data?.navigator) {
+      const app_path = item.app_path
+      const matched = app_path.match(/https:\/\/webstatic.mihoyo.com\/bbs\/event\/live\/index.html\?act_id=([^&]+)/)
+      if (matched) {
+        actId = matched[1]
+        break
+      }
+    }
+    return actId
+  }
+
   async getActIdByGame(game = 'gs') {
-    let actId
-    for (const uid of this.Uids[game]) {
-      actId = await this.getActId(uid)
-      if (actId) continue
+    let actId = await this.getActId2(game)
+    if (!actId) {
+      for (const uid of this.Uids[game]) {
+        actId = await this.getActId(uid)
+        if (actId) continue
+      }
     }
     return actId
   }
